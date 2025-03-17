@@ -44,3 +44,6 @@ Thank You 😊
 Name : Aditya
 Email : amaditya1618@gmail.com
 
+Deployment link: https://real-time-auction-ejs.onrender.com 
+
+Caution⚠ Due to render free deployment in initial time it delays the request by 50 seconds.
