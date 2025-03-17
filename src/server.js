@@ -5,6 +5,10 @@ import app from "./app.js";
 import prisma from "./config/prisma.js";
 const server = http.createServer(app);
 import cron from "node-cron";
+import { createRequire } from 'module';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 const io = new socketIo(server);
 
 io.on("connection", (socket) => {
@@ -77,4 +81,4 @@ server.listen(PORT, async () => {
     .catch((err) => console.log(err));
 });
 
-export default io;
+export default io;                                                                                                                                                     
