@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <%- include('./partials/header.ejs', { user : user }) %>
+    <div class="container mx-auto px-4 py-8">
+      <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Profile</h1>
+        <div class="space-y-2">
+          <p class="text-gray-700"><span class="font-semibold">Name:</span>
+            <%= user.name %>
+          </p>
+          <p class="text-gray-700"><span class="font-semibold">Email:</span>
+            <%= user.email %>
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Bidding History</h2>
+        <ul class="space-y-4">
+          <% user.bids.forEach(bid=> { %>
+            <li class="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <p class="text-gray-700"><span class="font-semibold">Auction:</span>
+                <%= bid.auction.title %>
+              </p>
+              <p class="text-gray-700"><span class="font-semibold">Bid Amount:</span> $<%= bid.amount %>
+              </p>
+              <p class="text-gray-700"><span class="font-semibold">Time:</span>
+                <%= bid.createdAt.toLocaleString() %>
+              </p>
+            </li>
+            <% }) %>
+        </ul>
+      </div>
+    </div>
+</body>
+
+</html>

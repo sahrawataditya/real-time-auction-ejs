@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    <%= auction.title %>
+  </title>
+  <%- include('../partials/socket') %>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      socket.on("new-bid", (data) => {
+        document.getElementById(
+          "currentBid"
+        ).innerText = `Current Bid Price: $${data.newBidAmount}`;
+        const biddingHistory = document.getElementById("biddingHistory");
+        const newBidItem = document.createElement("li");
+        newBidItem.className = "bg-gray-100 p-2 rounded-lg mb-2";
+        newBidItem.innerText = `$${data.newBidAmount} by ${data.bidderName
+          } at ${new Date(data.createdAt).toLocaleString()}`;
+        biddingHistory.prepend(newBidItem);
+      });
+    </script>
+</head>
+
+<body class="bg-gray-50 p-6">
+  <%- include('../partials/header.ejs',{user:user}) %>
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <h1 class="text-3xl font-bold mb-4">Title: <%= auction.title %>
+      </h1>
+      <p class="text-gray-700 mb-4">Description: <%= auction.description %>
+      </p>
+      <p class="text-gray-700 mb-4">
+        Starting Price: $<%= auction.startPrice %>
+      </p>
+      <% if (locals.error) { %>
+        <h1 class="text-red-500 text-2xl font-bold mb-4">
+          <%= error %>
+        </h1>
+        <% } %>
+          <% if (auction.bids.length> 0) { %>
+            <p id="currentBid" class="text-green-600 font-semibold mb-4">
+              Current Bid Price: $<%= auction.bids[0].amount || 0 %>
+            </p>
+            <% } else if(new Date() < new Date(auction.endTime)) { %>
+              <p id="currentBid" class="text-green-600 font-semibold mb-4">
+                Current Bid Price: $0
+              </p>
+              <% } %>
+                <% if (locals.user && new Date() < new Date(auction.endTime)) { %>
+                  <form id="bidForm" class="mb-6">
+                    <div class="flex gap-2">
+                      <input type="number" name="amount" placeholder="Enter your bid" required
+                        class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
+                      <button type="submit"
+                        class="bg-black text-white py-2 px-3 rounded-lg hover:bg-transparent transition duration-200">
+                        Place Bid
+                      </button>
+                    </div>
+                  </form>
+                  <script>
+                    document
+                      .getElementById("bidForm")
+                      .addEventListener("submit", async (e) => {
+                        e.preventDefault();
+                        const amount = e.target.amount.value;
+
+                        try {
+                          const response = await fetch(`/bids/<%= auction.id %>/bid`, {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ amount }),
+                          });
+                          if (response.ok) {
+                            e.target.amount.value = "";
+                          } else {
+                            alert("Bid placement failed. Please try again.");
+                          }
+                        } catch (error) {
+                          console.log(error);
+                          alert("An error occurred. Please try again.");
+                        }
+                      });
+                  </script>
+                  <% } %>
+                    <h2 class="text-2xl font-bold mb-4">Bidding History</h2>
+                    <ul id="biddingHistory" class="space-y-2">
+                      <% auction.bids.forEach(bid=> { %>
+                        <li class="bg-gray-100 p-2 rounded-lg">
+                          ₹<%= bid.amount %> by <%= bid.user.name %> at <%= bid.createdAt.toLocaleString() %>
+                        </li>
+                        <% }) %>
+                    </ul>
+    </div>
+</body>
+
+</html>

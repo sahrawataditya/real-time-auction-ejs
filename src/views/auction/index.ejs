@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <%- include('../partials/socket') %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        socket.on("new-auction", (data) => {
+          const container = document.querySelector('.overflow-x-auto');
+
+          let auctionsTable = document.querySelector('table');
+          let auctionsHistory = document.getElementById('auctionsHistory');
+          let noAuctionsMessage = document.querySelector('.overflow-x-auto > p');
+
+          if (noAuctionsMessage && noAuctionsMessage.textContent === 'No ongoing auctions found.') {
+            noAuctionsMessage.remove();
+          }
+
+          if (!auctionsTable) {
+            auctionsTable = document.createElement('table');
+            auctionsTable.className = 'min-w-full divide-y-2 divide-gray-200 bg-white text-sm my-5';
+
+            const thead = document.createElement('thead');
+            thead.className = 'ltr:text-left rtl:text-right';
+
+            const headerRow = document.createElement('tr');
+
+            const headers = [
+              'Auction Name',
+              'End Time',
+              'Created By',
+              'Total bids',
+              'Actions'
+            ];
+
+            headers.forEach(headerText => {
+              const th = document.createElement('th');
+              th.className = 'px-4 py-2 font-medium whitespace-nowrap text-gray-900';
+              th.textContent = headerText;
+              headerRow.appendChild(th);
+            });
+
+            thead.appendChild(headerRow);
+            auctionsTable.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'divide-y divide-gray-200';
+            tbody.id = 'auctionsHistory';
+            auctionsTable.appendChild(tbody);
+
+            container.appendChild(auctionsTable);
+
+            auctionsHistory = tbody;
+          }
+
+          const newAuctionRow = document.createElement("tr");
+
+          const auctionNameCell = document.createElement("td");
+          auctionNameCell.className = "px-4 py-2 font-medium whitespace-nowrap text-gray-900 capitalize";
+
+          const auctionLink = document.createElement("a");
+          auctionLink.href = `/auctions/${data.id}`;
+          auctionLink.innerText = data.title;
+          auctionNameCell.appendChild(auctionLink);
+
+          const endTimeCell = document.createElement("td");
+          endTimeCell.className = "px-4 py-2 whitespace-nowrap text-gray-700";
+          endTimeCell.innerText = new Date(data.endTime).toLocaleString();
+
+          const createdByCell = document.createElement("td");
+          createdByCell.className = "px-4 py-2 whitespace-nowrap text-gray-700 capitalize";
+          createdByCell.innerText = data.creator.name;
+
+          const totalBidsCell = document.createElement("td");
+          totalBidsCell.className = "px-4 py-2 whitespace-nowrap text-gray-700";
+          const totalBidsSpan = document.createElement("span");
+          totalBidsSpan.id = `totalBids-${data.id}`;
+          totalBidsSpan.innerText = data.bids.length;
+          totalBidsCell.appendChild(totalBidsSpan);
+
+          const actionsCell = document.createElement("td");
+          actionsCell.className = "px-4 py-2 whitespace-nowrap";
+
+          const viewButton = document.createElement("a");
+          viewButton.href = `/auctions/${data.id}`;
+          viewButton.className = "rounded-md inline-block border border-black bg-black px-3 py-1 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden";
+          viewButton.innerText = "View";
+          actionsCell.appendChild(viewButton);
+
+          newAuctionRow.appendChild(auctionNameCell);
+          newAuctionRow.appendChild(endTimeCell);
+          newAuctionRow.appendChild(createdByCell);
+          newAuctionRow.appendChild(totalBidsCell);
+          newAuctionRow.appendChild(actionsCell);
+
+          auctionsHistory.prepend(newAuctionRow);
+        });
+
+        socket.on("bid-placed", (data) => {
+          const totalBidsElement = document.getElementById(`totalBids-${data.auctionId}`);
+          if (totalBidsElement) {
+            totalBidsElement.innerText = data.totalBids;
+          }
+        });
+      });
+    </script>
+</head>
+
+<body>
+  <%- include('../partials/header.ejs', { user : user }) %>
+    <div class="overflow-x-auto px-4">
+      <div class="flex items-center justify-between sm:flex-nowrap flex-wrap mt-4 space-y-5">
+        <h1 class="sm:text-4xl text-xl font-bold">Ongoing Auctions</h1>
+        <a href="/auctions/create"
+          class="rounded-md border border-black bg-black px-6 py-2 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden">Create
+          Auction</a>
+      </div>
+      <h3 class="text-xl font-medium my-5">
+        <%= "Welcome , " + user.name %>
+      </h3>
+      <% if (auctions && auctions.length> 0) { %>
+        <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm my-5">
+          <thead class="ltr:text-left rtl:text-right">
+            <tr>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Auction Name
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                End Time
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Created By
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Total bids
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200" id="auctionsHistory">
+            <% auctions.map((auction,indx)=> { %>
+              <tr>
+                <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900 capitalize">
+                  <%= auction.title %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <%= new Date(auction.endTime).toLocaleString() %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+                  <%= auction.creator.name %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <span id="totalBids-<%= auction.id %>">
+
+                    <%= auction.bids.length %>
+                  </span>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                  <a href="/auctions/<%= auction.id %>"
+                    class="rounded-md inline-block border border-black bg-black px-3 py-1 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden">
+                    View
+                  </a>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
+        <% } else { %>
+          <p>No ongoing auctions found.</p>
+          <% } %>
+    </div>
+</body>
+
+</html>

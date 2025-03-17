@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <%- include('./partials/socket') %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        socket.on("leaderboardUpdate", (data) => {
+          if (Array.isArray(data)) {
+            data.forEach(auctionData => {
+              updateLeaderboardItem(auctionData);
+            });
+          } else {
+            updateLeaderboardItem(data);
+          }
+        });
+
+        function updateLeaderboardItem(data) {
+          const tbody = document.getElementById('auctionsHistory');
+
+          if (!tbody) {
+            console.error("auctionsHistory element not found");
+            return;
+          }
+
+          const existingRow = document.getElementById(`auction-${data.id}`);
+
+          if (existingRow) {
+            const rowIndex = Array.from(tbody.children).indexOf(existingRow);
+            existingRow.innerHTML = `
+        <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900 capitalize">
+          ${data.title}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          ₹ ${data.startPrice}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          ₹ ${data.highestBid}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+          ${data.highestBidder || 'No bids yet'}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+          ${data.creator}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          <span id="totalBids-${data.id}">
+            ${data.totalBids}
+          </span>
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap">
+          <a href="/auctions/${data.id}"
+            class="rounded-md inline-block border border-black bg-black px-3 py-1 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden">
+            View
+          </a>
+        </td>
+      `;
+          } else {
+            const newRow = document.createElement('tr');
+            newRow.id = `auction-${data.id}`;
+            newRow.innerHTML = `
+        <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900 capitalize">
+          ${data.title}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          ₹ ${data.startPrice}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          ₹ ${data.highestBid}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+          ${data.highestBidder || 'No bids yet'}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+          ${data.creator}
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+          <span id="totalBids-${data.id}">
+            ${data.totalBids}
+          </span>
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap">
+          <a href="/auctions/${data.id}"
+            class="rounded-md inline-block border border-black bg-black px-3 py-1 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden">
+            View
+          </a>
+        </td>
+      `;
+            tbody.prepend(newRow);
+
+            const noAuctionsMessage = document.querySelector('.overflow-x-auto > p');
+            if (noAuctionsMessage && noAuctionsMessage.textContent.trim() === 'No auctions found') {
+              noAuctionsMessage.remove();
+
+              if (!document.querySelector('.min-w-full')) {
+                createAuctionsTable();
+              }
+            }
+          }
+
+        }
+
+        function createAuctionsTable() {
+          const container = document.querySelector('.overflow-x-auto');
+          if (!container) return;
+
+          const table = document.createElement('table');
+          table.className = 'min-w-full divide-y-2 divide-gray-200 bg-white text-sm my-5';
+
+          const thead = document.createElement('thead');
+          thead.className = 'ltr:text-left rtl:text-right';
+
+          const headerRow = document.createElement('tr');
+
+          const headers = [
+            'Auction Name',
+            'Base Price',
+            'Highest Bid',
+            'Highest Bidder',
+            'Created By',
+            'Total bids',
+            'Actions'
+          ];
+
+          headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.className = 'px-4 py-2 font-medium whitespace-nowrap text-gray-900';
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+          });
+
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+          tbody.className = 'divide-y divide-gray-200';
+          tbody.id = 'auctionsHistory';
+          table.appendChild(tbody);
+
+          container.prepend(table);
+        }
+      });
+    </script>
+</head>
+
+<body>
+  <%- include('./partials/header.ejs', { user : user }) %>
+    <div class="overflow-x-auto px-4">
+      <div class="mt-4">
+        <h1 class="sm:text-4xl text-xl font-bold">Completed Auctions</h1>
+      </div>
+      <% if (auctions && auctions.length> 0) { %>
+        <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm my-5">
+          <thead class="ltr:text-left rtl:text-right">
+            <tr>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Auction Name
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Base Price
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Highest Bid
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Highest Bidder
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Created By
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Total bids
+              </th>
+              <th class="px-4 py-2 font-medium whitespace-nowrap text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200" id="auctionsHistory">
+            <% auctions.map((auction,indx)=> { %>
+              <tr id="auction-<%= auction.id %>">
+                <td class="px-4 py-2 font-medium whitespace-nowrap text-gray-900 capitalize">
+                  <%= auction.title %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+                  ₹ <%= auction.startPrice %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+                  ₹ <%= auction.highestBid %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+                  <%= auction.highestBidder %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700 capitalize">
+                  <%= auction.creator %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-gray-700">
+                  <span id="totalBids-<%= auction.id %>">
+                    <%= auction.totalBids %>
+                  </span>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                  <a href="/auctions/<%= auction.id %>"
+                    class="rounded-md inline-block border border-black bg-black px-3 py-1 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden">
+                    View
+                  </a>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
+        <% } else { %>
+          <p>No auctions found</p>
+          <% } %>
+    </div>
+</body>
+
+</html>

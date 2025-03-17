@@ -1,0 +1,10 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  socket.on("connect", (data) => {
+    console.log("Connected to server");
+  });
+  socket.on("disconnect", (data) => {
+    console.log("Disconnected from server");
+  });
+</script>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body>
+  <main class="flex items-center justify-center px-8 py-8 sm:px-12 lg:px-16 lg:py-12 min-h-screen">
+    <div class="max-w-xl lg:max-w-3xl">
+      <h1 class="mt-6 text-2xl font-bold text-gray-900 sm:text-3xl md:text-4xl text-center">
+        Welcome to Real Time Auction System 📈
+      </h1>
+
+      <p class="mt-4 leading-relaxed text-gray-500 text-center">
+        Real Time Auction System is an online platform for creating and
+        bidding on auctions.
+      </p>
+
+      <form action="/auth/login" method="POST" class="mt-8 flex flex-col w-full gap-6 max-w-md mx-auto">
+        <input type="email" name="email" placeholder="Email" required
+          class="w-full border border-gray-300 rounded-lg outline-none p-2" />
+        <input type="password" name="password" placeholder="Password" required
+          class="w-full border border-gray-300 rounded-lg outline-none p-2" />
+
+        <div class="w-fit">
+          <label for="accept_Form" class="flex gap-2 cursor-pointer">
+            <input type="checkbox" id="accept_Form" name="form"
+              class="size-5 rounded-md border-gray-200 bg-white shadow-xs outline-none accent-black" required />
+
+            <span class="text-sm text-gray-700">
+              I accept the terms and conditions.
+          </label>
+        </div>
+        <% if (locals.error) { %>
+          <p class="text-red-500 text-sm">
+            <%= locals.error %>
+          </p>
+          <% } %>
+            <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
+              <button type="submit" id="loginButton" type="submit" disabled
+                class="rounded-md border border-black bg-black px-12 py-3 text-sm font-medium text-white transition-all ease-in duration-300 cursor-pointer hover:bg-transparent hover:text-black focus:ring-1 focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:text-white">
+                Login
+              </button>
+              <p class="mt-4 text-sm text-gray-500 sm:mt-0">Don't have an account? <a href="/auth/signup"
+                  class="text-gray-700 underline">Sign up</a></p>
+            </div>
+      </form>
+    </div>
+  </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const checkbox = document.getElementById('accept_Form');
+      const loginButton = document.getElementById('loginButton');
+
+      checkbox.addEventListener('change', function () {
+        loginButton.disabled = !checkbox.checked;
+      });
+    });
+  </script>
+</body>
+
+</html>
